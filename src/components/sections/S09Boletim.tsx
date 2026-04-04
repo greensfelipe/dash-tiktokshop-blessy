@@ -112,6 +112,7 @@ export default function S09Boletim() {
 
       const imgWidth = 420;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const contentW = imgWidth - 16;
 
       // Extrai URLs de todos os campos
       const allText = [
@@ -125,7 +126,7 @@ export default function S09Boletim() {
       const urls = [...new Set(allText.match(urlRegex) || [])];
 
       // Se há links, aumenta o PDF para incluir seção de links
-      const linksBlockH = urls.length > 0 ? 50 + urls.length * 18 : 0;
+      const linksBlockH = urls.length > 0 ? 80 + urls.length * 36 : 0;
       const totalH = imgHeight + 40 + linksBlockH;
 
       const pdf = new jsPDF({
@@ -144,29 +145,40 @@ export default function S09Boletim() {
 
       // Seção de links clicáveis
       if (urls.length > 0) {
-        let linkY = imgHeight + 40;
+        let linkY = imgHeight + 50;
 
         // Linha separadora
-        pdf.setDrawColor(191, 249, 164, 80);
+        pdf.setDrawColor(191, 249, 164, 120);
+        pdf.setLineWidth(0.5);
         pdf.line(30, linkY, imgWidth + 10, linkY);
-        linkY += 18;
+        linkY += 24;
 
         // Título
-        pdf.setFontSize(11);
+        pdf.setFontSize(16);
         pdf.setFont("helvetica", "bold");
         pdf.setTextColor(191, 249, 164);
-        pdf.text("🔗  Links mencionados (clique para abrir)", 30, linkY);
-        linkY += 16;
+        pdf.text("🔗  Links mencionados", 30, linkY);
+        linkY += 14;
+
+        // Subtítulo
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(255, 255, 255, 150);
+        pdf.text("Clique para abrir no navegador", 30, linkY);
+        linkY += 22;
 
         // Links clicáveis
-        pdf.setFontSize(9.5);
-        pdf.setFont("helvetica", "normal");
         for (const url of urls) {
-          // Trunca se muito longo para exibir
-          const display = url.length > 65 ? url.slice(0, 62) + "..." : url;
-          pdf.setTextColor(160, 220, 255);
-          pdf.textWithLink(display, 30, linkY, { url });
-          linkY += 18;
+          // Fundo do link
+          pdf.setFillColor(255, 255, 255, 15);
+          pdf.roundedRect(28, linkY - 12, contentW, 28, 6, 6, "F");
+
+          const display = url.length > 55 ? url.slice(0, 52) + "..." : url;
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(130, 200, 255);
+          pdf.textWithLink("🔗  " + display, 38, linkY + 4, { url });
+          linkY += 36;
         }
       }
 
