@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { supabase } from "@/lib/supabase";
 import { type RelatorioDiario, DIAS, OKR, META_DIA } from "@/types/relatorio";
@@ -31,6 +31,7 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -203,9 +204,25 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
                 const pct = item ? (item.gmv_total / metaDia) * 100 : 0;
                 const isHighlight = item && item.gmv_total >= metaDia;
                 const metaChanged = Math.abs(metaDia - META_DIA) > 1;
+                const isExpanded = expanded === d;
+                const hasDetail = item && (item.video_top_retencao_hook || item.video_top_gmv || item.observacoes);
                 return item ? (
-                  <TableRow key={d} className={cn(isHighlight && "bg-lime/10 font-semibold")}>
-                    <TableCell><strong>D{d}</strong></TableCell>
+                  <React.Fragment key={d}>
+                  <TableRow
+                    className={cn(
+                      isHighlight && "bg-lime/10 font-semibold",
+                      hasDetail && "cursor-pointer hover:bg-gray-50/80"
+                    )}
+                    onClick={() => hasDetail && setExpanded(isExpanded ? null : d)}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {hasDetail && (
+                          <span className={cn("text-[0.6rem] text-gray-400 transition-transform", isExpanded && "rotate-90")}>▶</span>
+                        )}
+                        <strong>D{d}</strong>
+                      </div>
+                    </TableCell>
                     <TableCell>{DIAS[d]}</TableCell>
                     <TableCell className={cn(metaChanged && metaDia > META_DIA && "text-red-blessy font-semibold", metaChanged && metaDia < META_DIA && "text-green-accent font-semibold")}>
                       {fmt(metaDia)}
@@ -222,11 +239,11 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
                     </TableCell>
                     <TableCell>{item.videos_publicados ?? "—"}</TableCell>
                     <TableCell>{item.lives_realizadas ?? "—"}</TableCell>
-                    <TableCell className="max-w-[120px] truncate" title={item.video_top_retencao_hook ?? ""}>
-                      {item.video_top_retencao_hook || "—"}
+                    <TableCell className="max-w-[120px] truncate">
+                      {item.video_top_retencao_hook ? "📎 Ver detalhes" : "—"}
                     </TableCell>
-                    <TableCell className="max-w-[120px] truncate" title={item.video_top_gmv ?? ""}>
-                      {item.video_top_gmv || "—"}
+                    <TableCell className="max-w-[120px] truncate">
+                      {item.video_top_gmv ? "📎 Ver detalhes" : "—"}
                     </TableCell>
                     <TableCell>
                       {item.contingencia_acionada ? (
@@ -235,11 +252,11 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
                         <span className="text-gray-400 text-[0.7rem]">Não</span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-[140px] truncate text-gray-500" title={item.observacoes ?? ""}>
-                      {item.observacoes || "—"}
+                    <TableCell className="max-w-[140px] truncate text-gray-500">
+                      {item.observacoes ? "📎 Ver detalhes" : "—"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {onEdit && (
                           <Button
                             variant="ghost"
@@ -262,6 +279,45 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
                       </div>
                     </TableCell>
                   </TableRow>
+                  {isExpanded && (
+                    <TableRow className="bg-gray-50/50">
+                      <TableCell colSpan={12} className="px-6 py-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[0.75rem]">
+                          {item.video_top_retencao_hook && (
+                            <div>
+                              <div className="font-semibold text-green-dark text-[0.7rem] uppercase tracking-wide mb-1">
+                                🎯 Top Hook / Retenção
+                              </div>
+                              <div className="text-charcoal whitespace-pre-wrap leading-relaxed break-all">
+                                {item.video_top_retencao_hook}
+                              </div>
+                            </div>
+                          )}
+                          {item.video_top_gmv && (
+                            <div>
+                              <div className="font-semibold text-green-dark text-[0.7rem] uppercase tracking-wide mb-1">
+                                💰 Top GMV
+                              </div>
+                              <div className="text-charcoal whitespace-pre-wrap leading-relaxed break-all">
+                                {item.video_top_gmv}
+                              </div>
+                            </div>
+                          )}
+                          {item.observacoes && (
+                            <div>
+                              <div className="font-semibold text-green-dark text-[0.7rem] uppercase tracking-wide mb-1">
+                                📝 Observações
+                              </div>
+                              <div className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                                {item.observacoes}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </React.Fragment>
                 ) : (
                   <TableRow key={d}>
                     <TableCell><strong>D{d}</strong></TableCell>
