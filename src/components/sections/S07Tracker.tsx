@@ -23,12 +23,14 @@ function fmtPct(val: number, total: number): string {
 
 interface S07TrackerProps {
   isActive: boolean;
+  onEdit?: (item: RelatorioDiario) => void;
 }
 
-export default function S07Tracker({ isActive }: S07TrackerProps) {
+export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
   const [dados, setDados] = useState<RelatorioDiario[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -41,6 +43,14 @@ export default function S07Tracker({ isActive }: S07TrackerProps) {
     if (err) { setError(true); return; }
     setDados(data ?? []);
   }, []);
+
+  const excluir = useCallback(async (dia: number) => {
+    if (!confirm(`Excluir relatório do Dia ${dia}?`)) return;
+    setDeleting(dia);
+    await supabase.from("relatorio_diario").delete().eq("dia", dia);
+    setDeleting(null);
+    carregar();
+  }, [carregar]);
 
   useAutoRefresh(carregar, 5 * 60 * 1000, isActive);
 
@@ -106,18 +116,19 @@ export default function S07Tracker({ isActive }: S07TrackerProps) {
               <TableHead>Top GMV</TableHead>
               <TableHead>Contingência</TableHead>
               <TableHead>Obs.</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-gray-400 italic text-center py-6">
+                <TableCell colSpan={12} className="text-gray-400 italic text-center py-6">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-red-blessy italic text-center py-6">
+                <TableCell colSpan={12} className="text-red-blessy italic text-center py-6">
                   Erro ao carregar dados. Clique em ↻ Atualizar.
                 </TableCell>
               </TableRow>
@@ -159,13 +170,36 @@ export default function S07Tracker({ isActive }: S07TrackerProps) {
                     <TableCell className="max-w-[140px] truncate text-gray-500" title={item.observacoes ?? ""}>
                       {item.observacoes || "—"}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[0.68rem] h-6 px-2 text-blue-blessy hover:text-blue-blessy/80"
+                            onClick={() => onEdit(item)}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[0.68rem] h-6 px-2 text-red-blessy hover:text-red-blessy/80"
+                          onClick={() => excluir(item.dia)}
+                          disabled={deleting === item.dia}
+                        >
+                          {deleting === item.dia ? "..." : "🗑️"}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ) : (
                   <TableRow key={d}>
                     <TableCell><strong>D{d}</strong></TableCell>
                     <TableCell>{DIAS[d]}</TableCell>
                     <TableCell>R$ 28.141</TableCell>
-                    <TableCell colSpan={8} className="text-gray-400 italic">
+                    <TableCell colSpan={9} className="text-gray-400 italic">
                       Aguardando lançamento de Isabel
                     </TableCell>
                   </TableRow>
@@ -177,7 +211,7 @@ export default function S07Tracker({ isActive }: S07TrackerProps) {
               <TableCell>R$ 196.991</TableCell>
               <TableCell>{fmt(totalGMV)}</TableCell>
               <TableCell>{fmtPct(totalGMV, OKR)}</TableCell>
-              <TableCell colSpan={6} />
+              <TableCell colSpan={7} />
             </TableRow>
           </TableBody>
         </Table>

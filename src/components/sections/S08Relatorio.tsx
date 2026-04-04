@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import type { RelatorioDiario } from "@/types/relatorio";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/lib/supabase";
 import {
   relatorioSchema,
   type RelatorioFormValues,
   type RelatorioDiarioInsert,
+  DIAS_DATA,
 } from "@/types/relatorio";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,9 +35,15 @@ const DIAS_OPTIONS = [
   { value: "7", label: "Dia 7 — 09/04 Qui" },
 ];
 
-export default function S08Relatorio() {
+interface S08RelatorioProps {
+  editData?: RelatorioDiario | null;
+  onDone?: () => void;
+}
+
+export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const isEditing = !!editData;
 
   const {
     register,
@@ -49,6 +57,20 @@ export default function S08Relatorio() {
     defaultValues: { contingencia_acionada: false },
   });
 
+  useEffect(() => {
+    if (editData) {
+      setValue("dia", editData.dia);
+      setValue("gmv_total", editData.gmv_total);
+      setValue("videos_publicados", editData.videos_publicados ?? undefined);
+      setValue("lives_realizadas", editData.lives_realizadas ?? undefined);
+      setValue("video_top_retencao_hook", editData.video_top_retencao_hook ?? "");
+      setValue("video_top_gmv", editData.video_top_gmv ?? "");
+      setValue("contingencia_acionada", editData.contingencia_acionada);
+      setValue("observacoes", editData.observacoes ?? "");
+      setStatus("idle");
+    }
+  }, [editData, setValue]);
+
   const contingencia = watch("contingencia_acionada");
 
   async function onSubmit(values: RelatorioFormValues) {
@@ -56,7 +78,7 @@ export default function S08Relatorio() {
 
     const payload: RelatorioDiarioInsert = {
       dia: values.dia as 1 | 2 | 3 | 4 | 5 | 6 | 7,
-      data: values.data,
+      data: DIAS_DATA[values.dia],
       meta: 28141.57,
       gmv_total: values.gmv_total,
       videos_publicados: values.videos_publicados ?? null,
@@ -79,16 +101,18 @@ export default function S08Relatorio() {
 
     setStatus("success");
     reset();
+    onDone?.();
   }
 
   return (
     <div>
       <h1 className="font-bricolage text-[1.8rem] font-extrabold text-green-dark mb-1">
-        📥 Lançar Relatório do Dia
+        {isEditing ? "✏️ Editar Relatório" : "📥 Lançar Relatório do Dia"}
       </h1>
       <p className="text-[0.85rem] text-gray-500 mb-7">
-        Isabel preenche este formulário ao fechar cada dia — os dados atualizam o Tracker
-        automaticamente
+        {isEditing
+          ? `Editando relatório do Dia ${editData.dia} — corrija os campos e salve`
+          : "Isabel preenche este formulário ao fechar cada dia — os dados atualizam o Tracker automaticamente"}
       </p>
 
       <form
@@ -103,41 +127,29 @@ export default function S08Relatorio() {
           imediatamente.
         </p>
 
-        {/* Dia + Data */}
-        <div className="grid grid-cols-2 gap-3.5 mb-4">
-          <div>
-            <label className="block text-[0.72rem] font-semibold text-charcoal uppercase tracking-[0.04em] mb-1.5">
-              Dia (número)
-            </label>
-            <Select onValueChange={(v) => setValue("dia", Number(v))}>
-              <SelectTrigger className={cn(errors.dia && "border-red-blessy")}>
-                <SelectValue placeholder="Selecione o dia" />
-              </SelectTrigger>
-              <SelectContent>
-                {DIAS_OPTIONS.map((d) => (
-                  <SelectItem key={d.value} value={d.value}>
-                    {d.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.dia && (
-              <p className="text-[0.7rem] text-red-blessy mt-1">{errors.dia.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-[0.72rem] font-semibold text-charcoal uppercase tracking-[0.04em] mb-1.5">
-              Data
-            </label>
-            <Input
-              type="date"
-              {...register("data")}
-              className={cn(errors.data && "border-red-blessy")}
-            />
-            {errors.data && (
-              <p className="text-[0.7rem] text-red-blessy mt-1">{errors.data.message}</p>
-            )}
-          </div>
+        {/* Dia */}
+        <div className="mb-4">
+          <label className="block text-[0.72rem] font-semibold text-charcoal uppercase tracking-[0.04em] mb-1.5">
+            Dia da campanha
+          </label>
+          <Select
+            value={watch("dia")?.toString() ?? ""}
+            onValueChange={(v) => setValue("dia", Number(v))}
+          >
+            <SelectTrigger className={cn(errors.dia && "border-red-blessy")}>
+              <SelectValue placeholder="Selecione o dia" />
+            </SelectTrigger>
+            <SelectContent>
+              {DIAS_OPTIONS.map((d) => (
+                <SelectItem key={d.value} value={d.value}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.dia && (
+            <p className="text-[0.7rem] text-red-blessy mt-1">{errors.dia.message}</p>
+          )}
         </div>
 
         {/* GMV Total */}
@@ -231,12 +243,12 @@ export default function S08Relatorio() {
           disabled={isSubmitting}
           className="bg-green-dark text-lime hover:bg-green-mid mt-2 font-semibold"
         >
-          {isSubmitting ? "Salvando..." : "💾 Salvar Relatório"}
+          {isSubmitting ? "Salvando..." : isEditing ? "✏️ Atualizar Relatório" : "💾 Salvar Relatório"}
         </Button>
 
         {status === "success" && (
           <div className="mt-3 px-3.5 py-2.5 rounded-lg bg-green-50 border border-green-accent text-green-800 text-[0.78rem]">
-            ✅ Relatório salvo com sucesso! O Tracker foi atualizado.
+            ✅ Relatório {isEditing ? "atualizado" : "salvo"} com sucesso! O Tracker foi atualizado.
           </div>
         )}
         {status === "error" && (

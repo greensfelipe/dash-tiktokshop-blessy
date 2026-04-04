@@ -23,7 +23,6 @@ export type RelatorioDiarioInsert = Omit<
 
 export const relatorioSchema = z.object({
   dia: z.number().min(1, "Selecione o dia").max(7),
-  data: z.string().min(1, "Data obrigatória"),
   gmv_total: z.number().positive("GMV deve ser positivo"),
   videos_publicados: z.number().int().optional(),
   lives_realizadas: z.number().int().optional(),
@@ -47,3 +46,13 @@ export const DIAS: Record<number, string> = {
 
 export const OKR = 196991;
 export const META_DIA = 28141.57;
+
+export const DIAS_DATA: Record<number, string> = {
+  1: "2026-04-03",
+  2: "2026-04-04",
+  3: "2026-04-05",
+  4: "2026-04-06",
+  5: "2026-04-07",
+  6: "2026-04-08",
+  7: "2026-04-09",
+};
