@@ -112,13 +112,64 @@ export default function S09Boletim() {
 
       const imgWidth = 420;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Extrai URLs de todos os campos
+      const allText = [
+        formValues.fase_campanha,
+        formValues.video_performatico,
+        formValues.top_videos_promo,
+        formValues.roteiros_ganchos,
+        formValues.trend_musica_viral,
+      ].join("\n");
+      const urlRegex = /https?:\/\/[^\s,)]+/g;
+      const urls = [...new Set(allText.match(urlRegex) || [])];
+
+      // Se há links, aumenta o PDF para incluir seção de links
+      const linksBlockH = urls.length > 0 ? 50 + urls.length * 18 : 0;
+      const totalH = imgHeight + 40 + linksBlockH;
+
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
-        format: [imgWidth + 40, imgHeight + 40],
+        format: [imgWidth + 40, totalH],
       });
 
+      // Fundo para a área de links (se houver)
+      if (urls.length > 0) {
+        pdf.setFillColor(18, 56, 43);
+        pdf.rect(0, 0, imgWidth + 40, totalH, "F");
+      }
+
       pdf.addImage(canvas.toDataURL("image/png"), "PNG", 20, 20, imgWidth, imgHeight);
+
+      // Seção de links clicáveis
+      if (urls.length > 0) {
+        let linkY = imgHeight + 40;
+
+        // Linha separadora
+        pdf.setDrawColor(191, 249, 164, 80);
+        pdf.line(30, linkY, imgWidth + 10, linkY);
+        linkY += 18;
+
+        // Título
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(191, 249, 164);
+        pdf.text("🔗  Links mencionados (clique para abrir)", 30, linkY);
+        linkY += 16;
+
+        // Links clicáveis
+        pdf.setFontSize(9.5);
+        pdf.setFont("helvetica", "normal");
+        for (const url of urls) {
+          // Trunca se muito longo para exibir
+          const display = url.length > 65 ? url.slice(0, 62) + "..." : url;
+          pdf.setTextColor(160, 220, 255);
+          pdf.textWithLink(display, 30, linkY, { url });
+          linkY += 18;
+        }
+      }
+
       pdf.save(`boletim-dia-${formValues.dia}.pdf`);
     } catch (e) {
       console.error(e);
