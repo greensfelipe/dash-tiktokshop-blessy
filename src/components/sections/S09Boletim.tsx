@@ -93,114 +93,32 @@ export default function S09Boletim() {
   }
 
   async function gerarPDF() {
+    if (!previewRef.current) return;
     setGenerating(true);
 
     try {
+      const html2canvas = (await import("html2canvas-pro")).default;
       const { jsPDF } = await import("jspdf");
 
-      const W = 420;
-      const margin = 28;
-      const contentW = W - margin * 2;
+      // Aguarda fonts do sistema renderizarem
+      await document.fonts.ready;
 
-      // Pre-calculate height
-      const sections = [
-        { icon: "📊", label: "FASE DA CAMPANHA", text: formValues.fase_campanha },
-        { icon: "🔥", label: "VÍDEO MAIS PERFORMÁTICO (ONTEM)", text: formValues.video_performatico },
-        { icon: "🏆", label: "TOP VÍDEOS DA PROMO", text: formValues.top_videos_promo },
-        { icon: "🎬", label: "ROTEIROS / GANCHOS DO DIA", text: formValues.roteiros_ganchos },
-        { icon: "🎵", label: "TREND / MÚSICA VIRAL", text: formValues.trend_musica_viral },
-      ].filter((s) => s.text);
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        logging: false,
+      });
 
-      // Estimate height: header ~90, each section ~variable, footer ~50
-      const estimatedH = 120 + sections.length * 100 + 60;
-      const H = Math.max(estimatedH, 500);
+      const imgWidth = 420;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [imgWidth + 40, imgHeight + 40],
+      });
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [W, H] });
-
-      // Background gradient (approximate with two rects)
-      pdf.setFillColor(18, 56, 43); // #12382B
-      pdf.rect(0, 0, W, H / 2, "F");
-      pdf.setFillColor(26, 92, 70); // #1a5c46
-      pdf.rect(0, H / 2, W, H / 2, "F");
-
-      let y = 32;
-
-      // Badge
-      pdf.setFillColor(191, 249, 164, 50); // lime transparent
-      pdf.roundedRect(W / 2 - 80, y, 160, 20, 10, 10, "F");
-      pdf.setFontSize(9);
-      pdf.setTextColor(191, 249, 164);
-      pdf.text("WAR ROOM 4.4  ·  TIKTOK SHOP", W / 2, y + 13, { align: "center" });
-      y += 30;
-
-      // Title
-      pdf.setFontSize(24);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(191, 249, 164);
-      pdf.text("Boletim do Dia", W / 2, y + 20, { align: "center" });
-      y += 28;
-
-      // Subtitle
-      pdf.setFontSize(11);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(255, 255, 255, 150);
-      const diaLabel = formValues.dia ? `Dia ${formValues.dia}  ·  ${DIAS[formValues.dia] ?? ""}` : "";
-      pdf.text(diaLabel, W / 2, y + 12, { align: "center" });
-      y += 28;
-
-      // Sections
-      for (const section of sections) {
-        // Wrap text to calculate box height
-        pdf.setFontSize(10.5);
-        pdf.setFont("helvetica", "normal");
-        const lines = pdf.splitTextToSize(section.text, contentW - 24);
-        const boxH = 28 + lines.length * 14 + 10;
-
-        // Check if we need a new page
-        if (y + boxH > H - 50) {
-          pdf.addPage([W, H]);
-          pdf.setFillColor(18, 56, 43);
-          pdf.rect(0, 0, W, H / 2, "F");
-          pdf.setFillColor(26, 92, 70);
-          pdf.rect(0, H / 2, W, H / 2, "F");
-          y = 28;
-        }
-
-        // Box background
-        pdf.setFillColor(255, 255, 255, 20);
-        pdf.roundedRect(margin, y, contentW, boxH, 8, 8, "F");
-
-        // Label
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "bold");
-        pdf.setTextColor(191, 249, 164);
-        pdf.text(`${section.icon}  ${section.label}`, margin + 12, y + 16);
-
-        // Content text
-        pdf.setFontSize(10.5);
-        pdf.setFont("helvetica", "normal");
-        pdf.setTextColor(255, 255, 255, 230);
-        pdf.text(lines, margin + 12, y + 30);
-
-        y += boxH + 8;
-      }
-
-      // Footer
-      y = Math.max(y + 10, H - 50);
-      pdf.setDrawColor(255, 255, 255, 25);
-      pdf.line(margin, y, W - margin, y);
-      y += 16;
-
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(191, 249, 164);
-      pdf.text("Blessy Greens & Superfoods", W / 2, y, { align: "center" });
-
-      pdf.setFontSize(8);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(255, 255, 255, 90);
-      pdf.text("Promo 4.4  ·  Bora bater essa meta!", W / 2, y + 14, { align: "center" });
-
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 20, 20, imgWidth, imgHeight);
       pdf.save(`boletim-dia-${formValues.dia}.pdf`);
     } catch (e) {
       console.error(e);

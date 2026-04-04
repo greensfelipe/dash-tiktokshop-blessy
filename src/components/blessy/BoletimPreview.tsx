@@ -14,6 +14,10 @@ const SECTIONS = [
   { key: "trend_musica_viral" as const, icon: "🎵", label: "Trend / Música Viral pra Experimentar" },
 ];
 
+// Fontes do sistema para garantir que html2canvas renderize corretamente
+const FONT_BODY = "Arial, Helvetica, sans-serif";
+const FONT_HEADING = "Arial Black, Arial, Helvetica, sans-serif";
+
 const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
   ({ data }, ref) => {
     return (
@@ -21,11 +25,13 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
         ref={ref}
         style={{
           width: 420,
-          fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+          fontFamily: FONT_BODY,
           background: "linear-gradient(180deg, #12382B 0%, #1a5c46 100%)",
           borderRadius: 20,
           padding: 32,
           color: "#fff",
+          wordSpacing: "0.05em",
+          letterSpacing: "0.01em",
         }}
       >
         {/* Header */}
@@ -38,28 +44,40 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
               borderRadius: 99,
               padding: "4px 16px",
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 700,
+              fontFamily: FONT_BODY,
               color: "#BFF9A4",
               letterSpacing: "0.08em",
-              textTransform: "uppercase",
+              textTransform: "uppercase" as const,
               marginBottom: 12,
+              wordSpacing: "0.1em",
             }}
           >
             War Room 4.4 · TikTok Shop
           </div>
           <h1
             style={{
-              fontFamily: "'Bricolage Grotesque', sans-serif",
+              fontFamily: FONT_HEADING,
               fontSize: 26,
-              fontWeight: 800,
+              fontWeight: 900,
               color: "#BFF9A4",
               margin: "0 0 4px",
               lineHeight: 1.2,
+              letterSpacing: "-0.01em",
+              wordSpacing: "0.05em",
             }}
           >
             Boletim do Dia
           </h1>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0 }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.6)",
+              margin: 0,
+              fontFamily: FONT_BODY,
+              wordSpacing: "0.05em",
+            }}
+          >
             {data.dia ? `Dia ${data.dia} · ${DIAS[data.dia] ?? ""}` : ""}
           </p>
         </div>
@@ -81,11 +99,13 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
               <div
                 style={{
                   fontSize: 11,
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  fontFamily: FONT_BODY,
                   color: "#BFF9A4",
-                  textTransform: "uppercase",
+                  textTransform: "uppercase" as const,
                   letterSpacing: "0.06em",
                   marginBottom: 6,
+                  wordSpacing: "0.1em",
                 }}
               >
                 {section.icon} {section.label}
@@ -93,9 +113,12 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
               <div
                 style={{
                   fontSize: 13,
+                  fontFamily: FONT_BODY,
                   color: "rgba(255,255,255,0.9)",
-                  lineHeight: 1.6,
-                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.7,
+                  whiteSpace: "pre-wrap" as const,
+                  wordSpacing: "0.05em",
+                  letterSpacing: "0.01em",
                 }}
               >
                 {value}
@@ -115,15 +138,24 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
         >
           <div
             style={{
-              fontFamily: "'Bricolage Grotesque', sans-serif",
+              fontFamily: FONT_HEADING,
               fontSize: 14,
-              fontWeight: 700,
+              fontWeight: 900,
               color: "#BFF9A4",
+              wordSpacing: "0.05em",
             }}
           >
             Blessy Greens & Superfoods 🌿
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: FONT_BODY,
+              color: "rgba(255,255,255,0.35)",
+              marginTop: 4,
+              wordSpacing: "0.05em",
+            }}
+          >
             Promo 4.4 · Bora bater essa meta! 💪
           </div>
         </div>
