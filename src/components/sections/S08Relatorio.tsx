@@ -43,6 +43,7 @@ interface S08RelatorioProps {
 export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [gmvDisplay, setGmvDisplay] = useState("");
   const isEditing = !!editData;
 
   const {
@@ -61,6 +62,7 @@ export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
     if (editData) {
       setValue("dia", editData.dia);
       setValue("gmv_total", editData.gmv_total);
+      setGmvDisplay(editData.gmv_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 }));
       setValue("videos_publicados", editData.videos_publicados ?? undefined);
       setValue("lives_realizadas", editData.lives_realizadas ?? undefined);
       setValue("video_top_retencao_hook", editData.video_top_retencao_hook ?? "");
@@ -101,6 +103,7 @@ export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
 
     setStatus("success");
     reset();
+    setGmvDisplay("");
     onDone?.();
   }
 
@@ -158,13 +161,25 @@ export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
             GMV Total do Dia (R$)
           </label>
           <Input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="ex: 32500.00"
-            {...register("gmv_total", { valueAsNumber: true })}
+            type="text"
+            inputMode="decimal"
+            placeholder="ex: 32.500,00 ou 32500"
+            value={gmvDisplay}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setGmvDisplay(raw);
+              // Aceita formato BR (32.500,50) ou US (32500.50)
+              const normalized = raw.includes(",")
+                ? raw.replace(/\./g, "").replace(",", ".")
+                : raw;
+              const num = parseFloat(normalized);
+              setValue("gmv_total", isNaN(num) ? 0 : num);
+            }}
             className={cn(errors.gmv_total && "border-red-blessy")}
           />
+          <p className="text-[0.65rem] text-gray-400 mt-1">
+            Aceita vírgula ou ponto: 32.500,00 / 32500.00 / 32500
+          </p>
           {errors.gmv_total && (
             <p className="text-[0.7rem] text-red-blessy mt-1">{errors.gmv_total.message}</p>
           )}
@@ -191,9 +206,9 @@ export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
           <label className="block text-[0.72rem] font-semibold text-charcoal uppercase tracking-[0.04em] mb-1.5">
             Vídeo Top Retenção / Hook
           </label>
-          <Input
-            type="text"
-            placeholder="ex: 'POV sem blessy vs com blessy' ou link do vídeo"
+          <Textarea
+            rows={2}
+            placeholder={"ex: 'POV sem blessy vs com blessy'\nhttps://tiktok.com/..."}
             {...register("video_top_retencao_hook")}
           />
         </div>
@@ -203,9 +218,9 @@ export default function S08Relatorio({ editData, onDone }: S08RelatorioProps) {
           <label className="block text-[0.72rem] font-semibold text-charcoal uppercase tracking-[0.04em] mb-1.5">
             Vídeo Top GMV
           </label>
-          <Input
-            type="text"
-            placeholder="ex: 'live Renata 19h' ou link do vídeo"
+          <Textarea
+            rows={2}
+            placeholder={"ex: 'live Renata 19h'\nhttps://tiktok.com/...\nhttps://tiktok.com/..."}
             {...register("video_top_gmv")}
           />
         </div>
