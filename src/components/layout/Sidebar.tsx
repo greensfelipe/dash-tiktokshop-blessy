@@ -30,6 +30,7 @@ const NAV_GROUPS = [
     items: [
       { id: "s07", num: "07", label: "Tracker de GMV" },
       { id: "s08", num: "08", label: "📥 Lançar Relatório" },
+      { id: "s09", num: "09", label: "📋 Boletim Creators" },
     ],
   },
 ];
