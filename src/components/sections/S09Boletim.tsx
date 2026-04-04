@@ -112,75 +112,32 @@ export default function S09Boletim() {
 
       const imgWidth = 420;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const contentW = imgWidth - 16;
-
-      // Extrai URLs de todos os campos
-      const allText = [
-        formValues.fase_campanha,
-        formValues.video_performatico,
-        formValues.top_videos_promo,
-        formValues.roteiros_ganchos,
-        formValues.trend_musica_viral,
-      ].join("\n");
-      const urlRegex = /https?:\/\/[^\s,)]+/g;
-      const urls = [...new Set(allText.match(urlRegex) || [])];
-
-      // Se há links, aumenta o PDF para incluir seção de links
-      const linksBlockH = urls.length > 0 ? 80 + urls.length * 36 : 0;
-      const totalH = imgHeight + 40 + linksBlockH;
+      const pdfPadding = 20;
 
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
-        format: [imgWidth + 40, totalH],
+        format: [imgWidth + pdfPadding * 2, imgHeight + pdfPadding * 2],
       });
 
-      // Fundo para a área de links (se houver)
-      if (urls.length > 0) {
-        pdf.setFillColor(18, 56, 43);
-        pdf.rect(0, 0, imgWidth + 40, totalH, "F");
-      }
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", pdfPadding, pdfPadding, imgWidth, imgHeight);
 
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 20, 20, imgWidth, imgHeight);
+      // Sobrepõe links clicáveis nas posições onde URLs aparecem no preview
+      const previewEl = previewRef.current;
+      const linkEls = previewEl.querySelectorAll<HTMLElement>("[data-url]");
+      const previewRect = previewEl.getBoundingClientRect();
+      const scale = imgWidth / previewRect.width;
 
-      // Seção de links clicáveis
-      if (urls.length > 0) {
-        let linkY = imgHeight + 50;
-
-        // Linha separadora
-        pdf.setDrawColor(191, 249, 164, 120);
-        pdf.setLineWidth(0.5);
-        pdf.line(30, linkY, imgWidth + 10, linkY);
-        linkY += 24;
-
-        // Título
-        pdf.setFontSize(16);
-        pdf.setFont("helvetica", "bold");
-        pdf.setTextColor(191, 249, 164);
-        pdf.text("🔗  Links mencionados", 30, linkY);
-        linkY += 14;
-
-        // Subtítulo
-        pdf.setFontSize(10);
-        pdf.setFont("helvetica", "normal");
-        pdf.setTextColor(255, 255, 255, 150);
-        pdf.text("Clique para abrir no navegador", 30, linkY);
-        linkY += 22;
-
-        // Links clicáveis
-        for (const url of urls) {
-          // Fundo do link
-          pdf.setFillColor(255, 255, 255, 15);
-          pdf.roundedRect(28, linkY - 12, contentW, 28, 6, 6, "F");
-
-          const display = url.length > 55 ? url.slice(0, 52) + "..." : url;
-          pdf.setFontSize(12);
-          pdf.setFont("helvetica", "normal");
-          pdf.setTextColor(130, 200, 255);
-          pdf.textWithLink("🔗  " + display, 38, linkY + 4, { url });
-          linkY += 36;
-        }
-      }
+      linkEls.forEach((el) => {
+        const url = el.getAttribute("data-url");
+        if (!url) return;
+        const elRect = el.getBoundingClientRect();
+        const x = (elRect.left - previewRect.left) * scale + pdfPadding;
+        const y = (elRect.top - previewRect.top) * scale + pdfPadding;
+        const w = elRect.width * scale;
+        const h = elRect.height * scale;
+        pdf.link(x, y, w, h, { url });
+      });
 
       pdf.save(`boletim-dia-${formValues.dia}.pdf`);
     } catch (e) {

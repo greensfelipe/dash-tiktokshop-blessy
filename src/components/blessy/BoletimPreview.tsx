@@ -14,9 +14,50 @@ const SECTIONS = [
   { key: "trend_musica_viral" as const, icon: "🎵", label: "Trend / Música Viral pra Experimentar" },
 ];
 
-// Fontes do sistema para garantir que html2canvas renderize corretamente
 const FONT_BODY = "Arial, Helvetica, sans-serif";
 const FONT_HEADING = "Arial Black, Arial, Helvetica, sans-serif";
+
+const URL_REGEX = /https?:\/\/[^\s,)]+/g;
+
+function renderTextWithLinks(text: string) {
+  const parts: { text: string; url?: string }[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  URL_REGEX.lastIndex = 0;
+  while ((match = URL_REGEX.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ text: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ text: match[0], url: match[0] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ text: text.slice(lastIndex) });
+  }
+
+  if (parts.length === 0) return text;
+
+  return parts.map((part, i) =>
+    part.url ? (
+      <span
+        key={i}
+        data-url={part.url}
+        style={{
+          color: "#82c8ff",
+          textDecoration: "underline",
+          textDecorationColor: "rgba(130,200,255,0.5)",
+          textUnderlineOffset: "2px",
+          wordBreak: "break-all" as const,
+        }}
+      >
+        {part.text}
+      </span>
+    ) : (
+      <span key={i}>{part.text}</span>
+    )
+  );
+}
 
 const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
   ({ data }, ref) => {
@@ -121,7 +162,7 @@ const BoletimPreview = forwardRef<HTMLDivElement, BoletimPreviewProps>(
                   letterSpacing: "0.01em",
                 }}
               >
-                {value}
+                {renderTextWithLinks(value)}
               </div>
             </div>
           );
