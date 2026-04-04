@@ -87,6 +87,36 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
         <KpiCard label="Meta Diária" value="R$ 28.141" sub="Ritmo necessário" />
       </div>
 
+      {/* Barra de progresso do OKR */}
+      {!loading && (
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bricolage text-[0.82rem] font-semibold text-green-dark">
+              Progresso do OKR
+            </span>
+            <span className={cn(
+              "font-bricolage text-[0.9rem] font-bold",
+              totalGMV >= OKR ? "text-green-accent" : totalGMV >= OKR * 0.5 ? "text-amber-blessy" : "text-charcoal"
+            )}>
+              {fmtPct(totalGMV, OKR)}
+            </span>
+          </div>
+          <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-700 ease-out",
+                totalGMV >= OKR ? "bg-green-accent" : totalGMV >= OKR * 0.7 ? "bg-green-accent" : totalGMV >= OKR * 0.5 ? "bg-amber-blessy" : "bg-green-accent"
+              )}
+              style={{ width: `${Math.min((totalGMV / OKR) * 100, 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5 text-[0.65rem] text-gray-400">
+            <span>R$ 0</span>
+            <span>{fmt(totalGMV)} de {fmt(OKR)}</span>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto mb-5 rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between px-4 py-3.5 pb-0">
           <span className="font-bricolage text-[0.82rem] font-semibold text-charcoal">
