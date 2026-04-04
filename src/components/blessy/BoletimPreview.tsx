@@ -40,8 +40,11 @@ function renderTextWithLinks(text: string) {
 
   return parts.map((part, i) =>
     part.url ? (
-      <span
+      <a
         key={i}
+        href={part.url}
+        target="_blank"
+        rel="noopener noreferrer"
         data-url={part.url}
         style={{
           color: "#82c8ff",
@@ -49,10 +52,11 @@ function renderTextWithLinks(text: string) {
           textDecorationColor: "rgba(130,200,255,0.5)",
           textUnderlineOffset: "2px",
           wordBreak: "break-all" as const,
+          cursor: "pointer",
         }}
       >
         {part.text}
-      </span>
+      </a>
     ) : (
       <span key={i}>{part.text}</span>
     )
