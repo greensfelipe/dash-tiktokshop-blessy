@@ -14,10 +14,10 @@ export default function S05Gamificacao() {
       <h3 className="font-bricolage text-[1.15rem] font-bold text-green-dark mt-7 mb-3.5">
         Ranking de Creators
       </h3>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3.5 mb-6">
-        <BonusCard pos="🥇 1º" name="Top Creator GMV" prize="R$ 500" variant="gold" />
-        <BonusCard pos="🥈 2º" name="Top Creator GMV" prize="R$ 300" variant="silver" />
-        <BonusCard pos="🥉 3º" name="Top Creator GMV" prize="R$ 200" variant="bronze" />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5 mb-6">
+        <BonusCard pos="🥇 1º" name="Top Creator GMV" prize="Voucher Sephora R$ 500" icon="💄" variant="gold" />
+        <BonusCard pos="🥈 2º" name="Top Creator GMV" prize="Anel Vivara" icon="💍" variant="silver" />
+        <BonusCard pos="🥉 3º" name="Top Creator GMV" prize="Kit Autocuidado Spa em Casa" icon="🧖‍♀️" variant="bronze" />
       </div>
 
       <h3 className="font-bricolage text-[1.15rem] font-bold text-green-dark mt-7 mb-3.5">
@@ -30,7 +30,8 @@ export default function S05Gamificacao() {
 
       <Callout variant="green">
         <strong>Regra:</strong> O ranking é calculado pelo GMV total gerado por cada creator durante
-        os 7 dias da War Room (03–09/04). Felipe anuncia os resultados no grupo ao encerrar a
+        os 7 dias da War Room (03–09/04). Prêmios: 1º Voucher Sephora R$ 500, 2º Anel Vivara,
+        3º Kit Autocuidado Spa em Casa. Felipe anuncia os resultados no grupo ao encerrar a
         campanha. O bônus de time é pago somente se o OKR de <strong>R$ 196.991</strong> for
         atingido.
       </Callout>

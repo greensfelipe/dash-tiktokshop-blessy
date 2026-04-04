@@ -6,6 +6,7 @@ interface BonusCardProps {
   pos: string;
   name: string;
   prize: string;
+  icon?: string;
   variant: BonusVariant;
 }
 
@@ -16,12 +17,13 @@ const variantMap: Record<BonusVariant, string> = {
   team: "bg-green-50 border-2 border-green-500 text-green-800",
 };
 
-export default function BonusCard({ pos, name, prize, variant }: BonusCardProps) {
+export default function BonusCard({ pos, name, prize, icon, variant }: BonusCardProps) {
   return (
     <div className={cn("rounded-xl p-5 text-center", variantMap[variant])}>
       <div className="font-bricolage text-[1.8rem] font-extrabold mb-1">{pos}</div>
+      {icon && <div className="text-[2.4rem] mb-2">{icon}</div>}
       <div className="text-[0.8rem] font-semibold mb-2">{name}</div>
-      <div className="font-bricolage text-[1.4rem] font-bold">{prize}</div>
+      <div className="font-bricolage text-[1.1rem] font-bold leading-snug">{prize}</div>
     </div>
   );
 }
