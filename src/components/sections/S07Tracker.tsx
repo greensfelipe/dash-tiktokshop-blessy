@@ -57,6 +57,35 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
   const totalGMV = dados.reduce((sum, d) => sum + (d.gmv_total ?? 0), 0);
   const okrVariant = totalGMV >= OKR ? "positive" : totalGMV >= OKR * 0.5 ? "warning" : "default";
 
+  // Calcula meta ajustada por dia: redistribui déficit dos dias lançados
+  function calcMetaAjustada(): Record<number, number> {
+    const metas: Record<number, number> = {};
+    let acumuladoGMV = 0;
+
+    for (let d = 1; d <= 7; d++) {
+      const item = dados.find((x) => x.dia === d);
+      const diasRestantes = 7 - d + 1;
+
+      if (item) {
+        // Dia já lançado: meta era o que faltava dividido pelos dias restantes (incluindo este)
+        const faltava = OKR - acumuladoGMV;
+        metas[d] = Math.max(0, faltava / diasRestantes);
+        acumuladoGMV += item.gmv_total;
+      } else {
+        // Dia futuro: redistribui o que falta pelos dias restantes
+        const falta = Math.max(0, OKR - acumuladoGMV);
+        metas[d] = falta / diasRestantes;
+      }
+    }
+    return metas;
+  }
+
+  const metasAjustadas = calcMetaAjustada();
+  const diasRestantes = 7 - dados.length;
+  const metaAjustadaHoje = diasRestantes > 0
+    ? Math.max(0, OKR - totalGMV) / diasRestantes
+    : 0;
+
   return (
     <div>
       <h1 className="font-bricolage text-[1.8rem] font-extrabold text-green-dark mb-1">
@@ -84,7 +113,12 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
           value={loading ? "..." : fmt(Math.max(0, OKR - totalGMV))}
           sub="Para atingir o OKR"
         />
-        <KpiCard label="Meta Diária" value="R$ 28.141" sub="Ritmo necessário" />
+        <KpiCard
+          label="Meta Diária Ajustada"
+          value={loading ? "..." : diasRestantes > 0 ? fmt(metaAjustadaHoje) : "—"}
+          sub={diasRestantes > 0 ? `${diasRestantes} dia${diasRestantes > 1 ? "s" : ""} restante${diasRestantes > 1 ? "s" : ""}` : "Campanha encerrada"}
+          variant={metaAjustadaHoje > META_DIA * 1.3 ? "negative" : metaAjustadaHoje > META_DIA ? "warning" : "positive"}
+        />
       </div>
 
       {/* Barra de progresso do OKR */}
@@ -165,13 +199,17 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
             ) : (
               Array.from({ length: 7 }, (_, i) => i + 1).map((d) => {
                 const item = dados.find((x) => x.dia === d);
-                const pct = item ? (item.gmv_total / META_DIA) * 100 : 0;
-                const isHighlight = item && item.gmv_total >= META_DIA;
+                const metaDia = metasAjustadas[d] ?? META_DIA;
+                const pct = item ? (item.gmv_total / metaDia) * 100 : 0;
+                const isHighlight = item && item.gmv_total >= metaDia;
+                const metaChanged = Math.abs(metaDia - META_DIA) > 1;
                 return item ? (
                   <TableRow key={d} className={cn(isHighlight && "bg-lime/10 font-semibold")}>
                     <TableCell><strong>D{d}</strong></TableCell>
                     <TableCell>{DIAS[d]}</TableCell>
-                    <TableCell>R$ 28.141</TableCell>
+                    <TableCell className={cn(metaChanged && metaDia > META_DIA && "text-red-blessy font-semibold", metaChanged && metaDia < META_DIA && "text-green-accent font-semibold")}>
+                      {fmt(metaDia)}
+                    </TableCell>
                     <TableCell>{fmt(item.gmv_total)}</TableCell>
                     <TableCell
                       className={cn(
@@ -228,7 +266,9 @@ export default function S07Tracker({ isActive, onEdit }: S07TrackerProps) {
                   <TableRow key={d}>
                     <TableCell><strong>D{d}</strong></TableCell>
                     <TableCell>{DIAS[d]}</TableCell>
-                    <TableCell>R$ 28.141</TableCell>
+                    <TableCell className={cn(metaChanged && metaDia > META_DIA && "text-red-blessy font-semibold", metaChanged && metaDia < META_DIA && "text-green-accent font-semibold")}>
+                      {fmt(metaDia)}
+                    </TableCell>
                     <TableCell colSpan={9} className="text-gray-400 italic">
                       Aguardando lançamento de Isabel
                     </TableCell>
