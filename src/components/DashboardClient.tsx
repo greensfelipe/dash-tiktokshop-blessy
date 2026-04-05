@@ -15,8 +15,9 @@ import S06Lives from "./sections/S06Lives";
 import S07Tracker from "./sections/S07Tracker";
 import S08Relatorio from "./sections/S08Relatorio";
 import S09Boletim from "./sections/S09Boletim";
+import S10Videos from "./sections/S10Videos";
 
-const SECTIONS = ["s00", "s01", "s02", "s03", "s04", "s05", "s06", "s07", "s08", "s09"];
+const SECTIONS = ["s00", "s01", "s02", "s03", "s04", "s05", "s06", "s07", "s08", "s09", "s10"];
 
 export default function DashboardClient() {
   const [active, setActive] = useState("s00");
@@ -46,6 +47,7 @@ export default function DashboardClient() {
         {active === "s07" && <S07Tracker isActive={active === "s07"} onEdit={handleEdit} />}
         {active === "s08" && <S08Relatorio editData={editData} onDone={handleFormDone} />}
         {active === "s09" && <S09Boletim />}
+        {active === "s10" && <S10Videos />}
       </main>
       <NavIndicator />
     </div>
